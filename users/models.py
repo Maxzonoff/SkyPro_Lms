@@ -1,5 +1,10 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import CASCADE
+
+from materials.models import Course, Lesson
+from users.constants import PaymentMethod
 
 
 class UserManager(BaseUserManager):
@@ -45,3 +50,26 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=CASCADE, related_name="payments")
+    payment_date = models.DateTimeField(auto_now_add=True)
+    course = models.ForeignKey(
+        Course, on_delete=CASCADE, blank=True, null=True, help_text="Выберите курс"
+    )
+    lesson = models.ForeignKey(
+        Lesson, on_delete=CASCADE, blank=True, null=True, help_text="Выберите урок"
+    )
+    payment_amount = models.DecimalField(
+        decimal_places=2, max_digits=8, validators=[MinValueValidator(0)]
+    )
+    payment_method = models.CharField(
+        max_length=15,
+        choices=PaymentMethod.CHOICES,
+        default=PaymentMethod.BANK_TRANSFER,
+    )
+
+    class Meta:
+        verbose_name = "Оплата"
+        verbose_name_plural = "Оплаты"
