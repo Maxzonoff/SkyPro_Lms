@@ -14,7 +14,9 @@ class LessonSerializer(serializers.ModelSerializer):
             "description",
             "video_url",
             "course",
+            "owner",
         )
+        read_only_fields = ("owner",)
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -23,7 +25,15 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ("id", "title", "description", "lesson_count", "lessons")
+        fields = (
+            "id",
+            "title",
+            "description",
+            "lesson_count",
+            "lessons",
+            "owner",
+        )
+        read_only_fields = ("owner",)
 
     def get_lesson_count(self, course):
         return course.lessons.count()

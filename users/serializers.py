@@ -22,7 +22,14 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ("id", "payment_date", "payment_amount", "payment_method", "course", "lesson")
+        fields = (
+            "id",
+            "payment_date",
+            "payment_amount",
+            "payment_method",
+            "course",
+            "lesson",
+        )
 
     def validate(self, data):
         course = data.get("course")
@@ -44,6 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
+            "password",
             "phone_number",
             "town",
             "avatar",
@@ -51,3 +59,21 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "payments",
         ]
+
+        extra_kwargs = {"password": {"write_only": True}}
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Для просмотра чужого профиля — только общая информация"""
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "phone_number", "town", "avatar"]  # без пароля!
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    """Для редактирования своего профиля"""
+
+    class Meta:
+        model = User
+        fields = ["phone_number", "town", "avatar"]
