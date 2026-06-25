@@ -8,7 +8,10 @@ from materials.views import (
     LessonUpdateApiView,
     LessonRetrieveApiView,
     LessonDestroyApiView,
+    SubscriptionAPIView,
 )
+
+app_name = "materials"
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="courses")
@@ -25,6 +28,7 @@ urlpatterns = [
     path(
         "lessons/<int:pk>/update/", LessonUpdateApiView.as_view(), name="lessons_update"
     ),
+    path("subscribe/", SubscriptionAPIView.as_view(), name="subscribe"),
 ]
 
 urlpatterns += router.urls
