@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
@@ -33,6 +34,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "description",
+            "price",
             "lesson_count",
             "lessons",
             "owner",
@@ -40,9 +42,11 @@ class CourseSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("owner",)
 
+    @extend_schema_field(int)
     def get_lesson_count(self, course):
         return course.lessons.count()
 
+    @extend_schema_field(bool)
     def get_is_subscribed(self, course):
         """Проверяем, подписан ли текущий пользователь на курс"""
         user = self.context.get("request").user
@@ -56,3 +60,54 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = ("id", "user", "course")
         read_only_fields = ("user",)
+
+
+class PaymentCreateSerializer(serializers.Serializer):
+    """
+    Сериализатор для создания платежа.
+    Пользователь передаёт ID курса, мы создаём всё остальное.
+    """
+
+    course_id = serializers.IntegerField(
+        help_text="ID курса, который хочет оплатить пользователь"
+    )
+
+
+class PaymentResponseSerializer(serializers.Serializer):
+    """
+    Ответ при создании платежа — ссылка на оплату в Stripe.
+    """
+
+    payment_id = serializers.IntegerField(help_text="ID платежа в нашей системе")
+    payment_link = serializers.URLField(help_text="Ссылка на оплату в Stripe")
+    session_id = serializers.CharField(help_text="ID сессии в Stripe")
+
+
+class PaymentStatusSerializer(serializers.Serializer):
+    """
+    Ответ при проверке статуса платежа.
+    """
+
+    status = serializers.CharField(
+        help_text="Статус в нашей системе (pending/paid/cancelled)"
+    )
+    stripe_status = serializers.CharField(help_text="Статус сессии в Stripe")
+    payment_status = serializers.CharField(
+        help_text="Статус оплаты в Stripe (unpaid/paid)"
+    )
+
+
+class SubscriptionActionSerializer(serializers.Serializer):
+    """
+    Для подписки/отписки — пользователь передаёт course_id.
+    """
+
+    course = serializers.IntegerField(help_text="ID курса для подписки/отписки")
+
+
+class SubscriptionActionResponseSerializer(serializers.Serializer):
+    """
+    Ответ при подписке/отписке.
+    """
+
+    message = serializers.CharField(help_text="Результат действия")
