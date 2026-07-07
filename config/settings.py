@@ -14,7 +14,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 INSTALLED_APPS = [
@@ -24,11 +24,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_filters",
     "rest_framework_simplejwt",
     "rest_framework",
-    "users",
+    "drf_spectacular",
     "materials",
-    "django_filters",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -115,6 +116,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",  # авто-документация
 }
 
 AUTH_USER_MODEL = "users.User"
@@ -124,3 +126,13 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Maxzonoff API",
+    "DESCRIPTION": "API для платформы онлайн-обучения",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+# Stripe
+STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")

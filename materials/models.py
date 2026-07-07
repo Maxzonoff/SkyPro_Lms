@@ -8,6 +8,13 @@ class Course(models.Model):
     title = models.CharField(max_length=100)
     preview = models.ImageField(upload_to="course/previews/", blank=True, null=True)
     description = models.TextField()
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Цена",
+        help_text="Цена курса в рублях",
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=SET_NULL,

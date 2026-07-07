@@ -70,6 +70,12 @@ class Payment(models.Model):
         default=PaymentMethod.BANK_TRANSFER,
     )
 
+    stripe_product_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_price_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_session_id = models.CharField(max_length=255, blank=True, null=True)
+    payment_link = models.URLField(max_length=500, blank=True, null=True)
+    status = models.CharField(max_length=50, default="pending")
+
     class Meta:
         verbose_name = "Оплата"
         verbose_name_plural = "Оплаты"
