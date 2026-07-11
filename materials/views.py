@@ -28,6 +28,8 @@ from users.permissions import IsModer, IsOwner
 
 from materials.services import StripeService
 
+from .tasks import check_and_send_course_update
+
 
 class CourseViewSet(ModelViewSet):
     queryset = Course.objects.all()
@@ -51,6 +53,10 @@ class CourseViewSet(ModelViewSet):
         if user.groups.filter(name="moders").exists():
             return Course.objects.all()
         return Course.objects.filter(owner=user)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        check_and_send_course_update.delay(instance.pk)
 
 
 class LessonCreateApiView(CreateAPIView):
@@ -105,8 +111,6 @@ class LessonDestroyApiView(DestroyAPIView):
     description="Подписка или отписка от курса. Передай course_id в теле запроса.",
 )
 class SubscriptionAPIView(APIView):
-    """Подписка / отписка от курса"""
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -132,18 +136,12 @@ class SubscriptionAPIView(APIView):
     description="Создаёт продукт, цену и сессию оплаты в Stripe. Возвращает ссылку на оплату.",
 )
 class CoursePaymentAPIView(APIView):
-    """
-    POST /courses/<id>/pay/
-    Создаёт продукт, цену и сессию оплаты в Stripe.
-    """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
         course = get_object_or_404(Course, id=pk)
         user = request.user
 
-        # Проверяем, не оплачен ли уже
         if Payment.objects.filter(user=user, course=course, status="paid").exists():
             return Response(
                 {"detail": "Курс уже оплачен"}, status=status.HTTP_400_BAD_REQUEST
@@ -152,17 +150,14 @@ class CoursePaymentAPIView(APIView):
         course_price = getattr(course, "price", 1000)
         amount_in_kopecks = int(course_price * 100)
 
-        # Создаём продукт в Stripe
         product = StripeService.create_product(
             name=course.title, description=course.description[:255]
         )
 
-        # Создаём цену
         price = StripeService.create_price(
             product_id=product.id, amount=amount_in_kopecks
         )
 
-        # Создаём сессию оплаты
         success_url = "http://127.0.0.1:8000/"
         cancel_url = "http://127.0.0.1:8000/"
 
@@ -170,7 +165,6 @@ class CoursePaymentAPIView(APIView):
             price_id=price.id, success_url=success_url, cancel_url=cancel_url
         )
 
-        # Сохраняем в БД
         payment = Payment.objects.create(
             user=user,
             course=course,
@@ -198,8 +192,6 @@ class CoursePaymentAPIView(APIView):
     description="Проверяет статус платежа в Stripe и синхронизирует с нашей БД.",
 )
 class PaymentStatusAPIView(APIView):
-    """GET /payments/<id>/status/ — проверяет статус платежа в Stripe"""
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):

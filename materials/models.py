@@ -23,6 +23,7 @@ class Course(models.Model):
         verbose_name="Владелец",
         help_text="Укажите владельца курса",
     )
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Курс"
