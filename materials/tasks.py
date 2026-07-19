@@ -15,11 +15,7 @@ def send_course_update_email(course_id):
         return
 
     subscriptions = Subscription.objects.filter(course=course)
-    recipient_list = [
-        sub.user.email
-        for sub in subscriptions
-        if sub.user.email
-    ]
+    recipient_list = [sub.user.email for sub in subscriptions if sub.user.email]
 
     if not recipient_list:
         return
