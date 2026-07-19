@@ -57,8 +57,19 @@ jobs:
         run: |
           poetry run python manage.py test
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: snok/install-poetry@v1
+      - run: poetry install --no-interaction --no-ansi
+      - run: poetry run black --check .
+
   deploy:
-    needs: test
+    needs: [test, lint]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
 
